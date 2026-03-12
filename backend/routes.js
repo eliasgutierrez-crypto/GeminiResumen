@@ -25,12 +25,13 @@ router.post('/resumir', authMiddleware, async (req, res) => {
 
   try {
     const respuesta = await axios.post(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
-        contents: [
+        model: "gemini-2.5-flash",
+        messages: [
           {
             role: "user",
-            parts: [ { text: `Resume el siguiente texto de forma concisa:\n\n${texto}` } ]
+            content: `Resume el siguiente texto de forma concisa:\n\n${texto}`
           }
         ]
       },
@@ -42,7 +43,7 @@ router.post('/resumir', authMiddleware, async (req, res) => {
       }
     );
 
-    const resumen = respuesta.data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo obtener resumen';
+    const resumen = respuesta.data.choices?.[0]?.message?.content || 'No se pudo obtener resumen';
     res.json({ resumen });
   } catch (error) {
     console.error('Error llamando a Gemini API:', error.response?.data || error.message);
