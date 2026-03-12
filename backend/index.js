@@ -3,10 +3,28 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+
+const pool = require('./db');
 const authRoutes = require('./auth');
 const resumenRoutes = require('./routes');
 
 const app = express();
+
+// Crear tabla usuarios si no existe
+async function ensureUsuariosTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password TEXT NOT NULL
+      )
+    `);
+    console.log('Tabla usuarios verificada/creada');
+  } catch (err) {
+    console.error('Error creando/verificando tabla usuarios:', err);
+  }
+}
 
 // Middlewares
 app.use(cors());
@@ -27,6 +45,8 @@ app.get(/^\/(?!api|auth).*/, (req, res) => {
 // Puerto dinámico para Render
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+ensureUsuariosTable().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
 });
