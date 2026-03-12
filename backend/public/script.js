@@ -71,13 +71,17 @@ if (resumirBtn) {
     });
 
         const data = await res.json();
-        if (data.error && (data.error.toLowerCase().includes('token') || data.error.toLowerCase().includes('autorizado'))) {
+        let errorMsg = data.error;
+        if (typeof errorMsg !== 'string') {
+          errorMsg = JSON.stringify(errorMsg);
+        }
+        if (errorMsg && (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('autorizado'))) {
           localStorage.removeItem('token');
           alert('Sesión expirada o token inválido. Por favor, inicia sesión de nuevo.');
           window.location.href = 'index.html';
           return;
         }
-        resultadoDiv.innerHTML = `<p class="text-gray-700">${data.resumen || data.error}</p>`;
+        resultadoDiv.innerHTML = `<p class="text-gray-700">${data.resumen || errorMsg}</p>`;
   });
 }
 
