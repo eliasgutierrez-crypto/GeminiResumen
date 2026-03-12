@@ -75,13 +75,28 @@ if (resumirBtn) {
         if (typeof errorMsg !== 'string') {
           errorMsg = JSON.stringify(errorMsg);
         }
-        if (errorMsg && (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('autorizado'))) {
+        // Solo cerrar sesión si el error es de JWT local, no si es de Gemini
+        if (
+          errorMsg &&
+          (errorMsg.toLowerCase().includes('no autorizado') ||
+           errorMsg.toLowerCase().includes('token inválido') ||
+           errorMsg.toLowerCase().includes('falta token'))
+        ) {
           localStorage.removeItem('token');
           alert('Sesión expirada o token inválido. Por favor, inicia sesión de nuevo.');
           window.location.href = 'index.html';
           return;
         }
-        resultadoDiv.innerHTML = `<p class="text-gray-700">${data.resumen || errorMsg}</p>`;
+        // Si el error es de Gemini (UNAUTHENTICATED o authentication credentials), mostrar mensaje pero no cerrar sesión
+        if (
+          errorMsg &&
+          (errorMsg.toLowerCase().includes('authentication credential') ||
+           errorMsg.toLowerCase().includes('unauthenticated'))
+        ) {
+          resultadoDiv.innerHTML = `<p class=\"text-red-600 font-bold\">Error de autenticación con Gemini API. Revisa tu API Key.</p>`;
+          return;
+        }
+        resultadoDiv.innerHTML = `<p class=\"text-gray-700\">${data.resumen || errorMsg}</p>`;
   });
 }
 
