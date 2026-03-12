@@ -1,62 +1,90 @@
-// Guardar token
-let token = localStorage.getItem('token') || '';
+var userToken = localStorage.getItem('token') || '';
 
-// Registro
-document.getElementById('btnRegister')?.addEventListener('click', async () => {
-  const username = document.getElementById('regUsername').value;
-  const password = document.getElementById('regPassword').value;
+// ======= LOGIN FORM =======
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
-  const res = await fetch('http://localhost:3000/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
+    if (!username || !password) return alert('Ingresa usuario y contraseña');
+
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if (data.token) {
+      userToken = data.token;
+      localStorage.setItem('token', userToken);
+      window.location.href = 'dashboard.html';
+    } else {
+      alert(data.error);
+    }
   });
+}
 
-  const data = await res.json();
-  alert(data.message || data.error);
-});
+// ======= REGISTER FORM =======
+const registerBtn = document.getElementById('btnRegister');
+if (registerBtn) {
+  registerBtn.addEventListener('click', async () => {
+    const username = document.getElementById('regUsername')?.value;
+    const password = document.getElementById('regPassword')?.value;
 
-// Login
-document.getElementById('btnLogin')?.addEventListener('click', async () => {
-  const username = document.getElementById('loginUsername').value;
-  const password = document.getElementById('loginPassword').value;
+    if (!username || !password) return alert('Ingresa usuario y contraseña');
 
-  const res = await fetch('http://localhost:3000/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    alert(data.message || data.error);
   });
+}
 
-  const data = await res.json();
-  if (data.token) {
-    token = data.token;
-    localStorage.setItem('token', token);
-    window.location.href = 'dashboard.html';
-  } else {
-    alert(data.error);
-  }
-});
+// ======= DASHBOARD =======
+const resumirBtn = document.getElementById('resumirBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const resultadoDiv = document.getElementById('resultado');
+
+// Redirigir si no hay token
+if (resumirBtn && !userToken) window.location.href = 'index.html';
 
 // Resumir texto
-document.getElementById('btnResumen')?.addEventListener('click', async () => {
-  const texto = document.getElementById('texto').value;
-  if (!texto) return alert('Ingresa un texto');
+if (resumirBtn) {
+  resumirBtn.addEventListener('click', async () => {
+    const texto = document.getElementById('texto').value;
+    if (!texto) return alert('Ingresa un texto');
 
-  const res = await fetch('http://localhost:3000/api/resumir', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ texto })
+    const res = await fetch('/api/resumir', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ texto })
+    });
+
+        const data = await res.json();
+        if (data.error && (data.error.toLowerCase().includes('token') || data.error.toLowerCase().includes('autorizado'))) {
+          localStorage.removeItem('token');
+          alert('Sesión expirada o token inválido. Por favor, inicia sesión de nuevo.');
+          window.location.href = 'index.html';
+          return;
+        }
+        resultadoDiv.innerHTML = `<p class="text-gray-700">${data.resumen || data.error}</p>`;
   });
-
-  const data = await res.json();
-  document.getElementById('resultado').textContent = data.resumen || data.error;
-});
+}
 
 // Logout
-document.getElementById('btnLogout')?.addEventListener('click', () => {
-  localStorage.removeItem('token');
-  window.location.href = 'index.html';
-});
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+  });
+}

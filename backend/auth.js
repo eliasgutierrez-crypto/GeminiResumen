@@ -1,4 +1,3 @@
-
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -12,7 +11,6 @@ router.post('/register', async (req, res) => {
   if (!username || !password) return res.status(400).json({ error: 'Faltan datos' });
 
   try {
-    // Verificar si el usuario ya existe
     const existe = await pool.query('SELECT * FROM usuarios WHERE username = $1', [username]);
     if (existe.rows.length > 0) return res.status(400).json({ error: 'Usuario ya existe' });
 
@@ -28,6 +26,8 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Faltan datos' });
+
   try {
     const userRes = await pool.query('SELECT * FROM usuarios WHERE username = $1', [username]);
     if (userRes.rows.length === 0) return res.status(400).json({ error: 'Usuario no existe' });

@@ -25,13 +25,12 @@ router.post('/resumir', authMiddleware, async (req, res) => {
 
   try {
     const respuesta = await axios.post(
-      'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
-        model: "gemini-2.5-flash",
-        messages: [
+        contents: [
           {
             role: "user",
-            content: `Resume el siguiente texto de forma concisa:\n\n${texto}`
+            parts: [ { text: `Resume el siguiente texto de forma concisa:\n\n${texto}` } ]
           }
         ]
       },
@@ -43,19 +42,13 @@ router.post('/resumir', authMiddleware, async (req, res) => {
       }
     );
 
-    // Obtener contenido del resumen
-    const resumen = respuesta.data.choices[0].message.content;
+    const resumen = respuesta.data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo obtener resumen';
     res.json({ resumen });
-
   } catch (error) {
     console.error('Error llamando a Gemini API:', error.response?.data || error.message);
-
-    // Devolver mensaje claro al frontend
-    if (error.response) {
-      res.status(error.response.status).json({ error: error.response.data || 'Error en la API de Gemini' });
-    } else {
-      res.status(500).json({ error: 'Error interno del servidor al generar resumen' });
-    }
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || 'Error interno al generar resumen'
+    });
   }
 });
 

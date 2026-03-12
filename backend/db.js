@@ -1,11 +1,8 @@
 const { Pool } = require('pg');
 
-// Crear pool usando DATABASE_URL del .env
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false // Necesario en Render/Postgres remota
-  }
+  ssl: { rejectUnauthorized: false } // necesario en Render u otras bases de datos remotas
 });
 
 module.exports = pool;
