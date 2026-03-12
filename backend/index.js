@@ -20,7 +20,7 @@ app.use('/api', resumenRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Catch-all: cualquier otra ruta devuelve index.html (para SPA)
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
