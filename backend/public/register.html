@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Resumen - Registro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">Registro</h1>
+    <form id="registerForm" class="flex flex-col gap-4">
+      <input type="text" id="regUsername" placeholder="Usuario" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="password" id="regPassword" placeholder="Contraseña" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button type="submit" id="btnRegister" class="bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Registrarse</button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-500">¿Ya tienes cuenta? <a href="index.html" class="text-blue-500 hover:underline">Inicia sesión</a></p>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    // Manejar el registro desde el formulario
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      document.getElementById('btnRegister').click();
+    });
+  </script>
+</body>
+</html>
