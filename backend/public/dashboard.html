@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Resumen - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <header class="bg-blue-500 text-white py-4 px-6 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Gemini Resumen</h1>
+    <button id="logoutBtn" class="bg-white text-blue-500 px-3 py-1 rounded hover:bg-gray-100">Cerrar sesión</button>
+  </header>
+
+  <main class="flex-1 p-6 max-w-3xl mx-auto flex flex-col gap-6">
+    <textarea id="texto" rows="6" placeholder="Escribe el texto que quieres resumir..." class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+    <button id="resumirBtn" class="bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition w-32">Resumir</button>
+
+    <div id="resultado" class="bg-white p-4 rounded shadow border border-gray-200 min-h-[100px]">
+      <p class="text-gray-700">El resumen aparecerá aquí...</p>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
