@@ -26,32 +26,33 @@ router.post('/resumir', authMiddleware, async (req, res) => {
     console.log(' Iniciando llamada a Gemini API...');
     console.log(' Texto a resumir longitud:', texto.length);
     console.log(' API Key configurada:', process.env.GEMINI_API_KEY ? 'Sí' : 'No');
-    console.log(' Endpoint:', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
-    console.log(' Modelo:', 'gemini-pro');
+    console.log(' Endpoint:', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
+    console.log(' Modelo:', 'gemini-1.5-flash');
     
     const respuesta = await axios.post(
-      'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
-        model: "gemini-pro",
-        messages: [
+        contents: [
           {
-            role: "user",
-            content: `Resume el siguiente texto:\n\n${texto}`
+            parts: [
+              {
+                text: `Resume el siguiente texto:\n\n${texto}`
+              }
+            ]
           }
         ]
       },
       {
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.GEMINI_API_KEY}`
+          "Content-Type": "application/json"
         }
       }
     );
 
     console.log(' Respuesta exitosa de Gemini API');
     console.log(' Status:', respuesta.status);
-    console.log(' Choices:', respuesta.data.choices?.length || 0);
-    const resumen = respuesta.data.choices?.[0]?.message?.content || 'No se pudo obtener resumen';
+    console.log(' Candidates:', respuesta.data.candidates?.length || 0);
+    const resumen = respuesta.data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo obtener resumen';
     console.log(' Resumen generado, longitud:', resumen.length);
     console.log(' Resumen:', resumen.substring(0, 100) + '...');
     res.json({ resumen });
