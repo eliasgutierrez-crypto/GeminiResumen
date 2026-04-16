@@ -1,13 +1,8 @@
 const express = require('express');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 
 const router = express.Router();
-
-// Cache simple en memoria para resúmenes (hash del texto -> resumen)
-const cache = new Map();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
 
 // Middleware para verificar token JWT
 function authMiddleware(req, res, next) {
@@ -18,95 +13,24 @@ function authMiddleware(req, res, next) {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch (err) {
-    console.error('Error verificando token:', err.message);
     res.status(401).json({ error: 'Token inválido' });
   }
 }
 
-// Función para generar hash del texto para cache
-function generarHash(texto) {
-  return crypto.createHash('md5').update(texto).digest('hex');
-}
-
-// Función para limpiar cache antiguo
-function limpiarCache() {
-  const ahora = Date.now();
-  for (const [hash, item] of cache.entries()) {
-    if (ahora - item.timestamp > CACHE_TTL) {
-      cache.delete(hash);
-    }
-  }
-}
-
-// Función para truncar texto si es muy largo (optimización de cuota)
-function optimizarTexto(texto) {
-  const MAX_CARACTERES = 8000; // Límite para optimizar cuota
-  
-  if (texto.length <= MAX_CARACTERES) {
-    return texto;
-  }
-  
-  // Truncar manteniendo frases completas
-  const truncado = texto.substring(0, MAX_CARACTERES);
-  const ultimaPuntuacion = Math.max(
-    truncado.lastIndexOf('.'),
-    truncado.lastIndexOf('!'),
-    truncado.lastIndexOf('?')
-  );
-  
-  if (ultimaPuntuacion > MAX_CARACTERES * 0.8) {
-    return truncado.substring(0, ultimaPuntuacion + 1) + '\n\n[Texto truncado para optimizar procesamiento]';
-  }
-  
-  return truncado + '...';
-}
-
-// Ruta protegida para resumir texto usando Gemini optimizado
+// Ruta protegida para resumir texto usando Gemini
 router.post('/resumir', authMiddleware, async (req, res) => {
   const { texto } = req.body;
   if (!texto) return res.status(400).json({ error: 'No hay texto para resumir' });
 
-  // Validar longitud mínima
-  if (texto.trim().length < 50) {
-    return res.status(400).json({ error: 'El texto debe tener al menos 50 caracteres' });
-  }
-
-  // Limpiar cache antiguo
-  limpiarCache();
-
-  // Generar hash del texto
-  const textoHash = generarHash(texto);
-  
-  // Verificar cache
-  const cacheItem = cache.get(textoHash);
-  if (cacheItem && (Date.now() - cacheItem.timestamp < CACHE_TTL)) {
-    console.log('Resumen obtenido desde cache');
-    return res.json({ resumen: cacheItem.resumen, desdeCache: true });
-  }
-
   try {
-    // Optimizar texto para reducir cuota
-    const textoOptimizado = optimizarTexto(texto);
-    
-    // Verificar API Key
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('ERROR: GEMINI_API_KEY no está configurada en variables de entorno');
-      return res.status(500).json({ error: 'Error de configuración del servidor: API Key no encontrada' });
-    }
-    
-    console.log('API Key configurada:', process.env.GEMINI_API_KEY.substring(0, 10) + '...');
-    
-    // Prompt simple
-    const promptOptimizado = `Resume el siguiente texto:\n\n${textoOptimizado}`;
-
     const respuesta = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
-        model: "gemini-1.5-pro",
+        model: "gemini-pro",
         messages: [
           {
             role: "user",
-            content: `Resume el siguiente texto:\n\n${textoOptimizado}`
+            content: `Resume el siguiente texto:\n\n${texto}`
           }
         ]
       },
@@ -118,52 +42,13 @@ router.post('/resumir', authMiddleware, async (req, res) => {
       }
     );
 
-    console.log(' Respuesta de Gemini API:');
-    console.log('   - Status:', respuesta.status);
-    console.log('   - Choices:', respuesta.data.choices?.length || 0);
-    console.log('   - Content length:', respuesta.data.choices?.[0]?.message?.content?.length || 0);
-    console.log('   - Respuesta completa:', JSON.stringify(respuesta.data, null, 2));
-
     const resumen = respuesta.data.choices?.[0]?.message?.content || 'No se pudo obtener resumen';
-    
-    // Guardar en cache
-    cache.set(textoHash, {
-      resumen,
-      timestamp: Date.now()
-    });
-    
-    console.log(`Resumen generado y cacheado. Cache size: ${cache.size}`);
-    res.json({ resumen, desdeCache: false });
+    res.json({ resumen });
     
   } catch (error) {
-    console.error('Error llamando a Gemini API:', error.response?.data || error.message);
-    
-    // Manejar errores específicos de cuota
-    if (error.response?.status === 429) {
-      return res.status(429).json({ 
-        error: 'Límite de cuota excedido. Por favor, intenta más tarde.' 
-      });
-    }
-    
-    if (error.code === 'ECONNABORTED') {
-      return res.status(408).json({ 
-        error: 'Timeout en la solicitud. Intenta con un texto más corto.' 
-      });
-    }
-    
-    res.status(error.response?.status || 500).json({
-      error: error.response?.data || 'Error interno al generar resumen'
-    });
+    console.error('Error llamando a Gemini API:', error.message);
+    res.status(500).json({ error: 'Error interno al generar resumen' });
   }
-});
-
-// Ruta para obtener estadísticas del cache (opcional)
-router.get('/cache-stats', authMiddleware, (req, res) => {
-  limpiarCache();
-  res.json({
-    cacheSize: cache.size,
-    ttlMinutes: CACHE_TTL / (60 * 1000)
-  });
 });
 
 module.exports = router;
