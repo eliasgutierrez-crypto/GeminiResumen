@@ -23,6 +23,12 @@ router.post('/resumir', authMiddleware, async (req, res) => {
   if (!texto) return res.status(400).json({ error: 'No hay texto para resumir' });
 
   try {
+    console.log(' Iniciando llamada a Gemini API...');
+    console.log(' Texto a resumir longitud:', texto.length);
+    console.log(' API Key configurada:', process.env.GEMINI_API_KEY ? 'Sí' : 'No');
+    console.log(' Endpoint:', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+    console.log(' Modelo:', 'gemini-pro');
+    
     const respuesta = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
@@ -42,12 +48,27 @@ router.post('/resumir', authMiddleware, async (req, res) => {
       }
     );
 
+    console.log(' Respuesta exitosa de Gemini API');
+    console.log(' Status:', respuesta.status);
+    console.log(' Choices:', respuesta.data.choices?.length || 0);
     const resumen = respuesta.data.choices?.[0]?.message?.content || 'No se pudo obtener resumen';
+    console.log(' Resumen generado, longitud:', resumen.length);
+    console.log(' Resumen:', resumen.substring(0, 100) + '...');
     res.json({ resumen });
     
   } catch (error) {
-    console.error('Error llamando a Gemini API:', error.message);
-    res.status(500).json({ error: 'Error interno al generar resumen' });
+    console.error(' Error detallado llamando a Gemini API:');
+    console.error(' Status:', error.response?.status);
+    console.error(' Status Text:', error.response?.statusText);
+    console.error(' Response Data:', JSON.stringify(error.response?.data, null, 2));
+    console.error(' Error Message:', error.message);
+    console.error(' Error Code:', error.code);
+    console.error(' Full Error:', error);
+    
+    res.status(error.response?.status || 500).json({ 
+      error: 'Error interno al generar resumen',
+      detalle: error.response?.data || error.message 
+    });
   }
 });
 
