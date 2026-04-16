@@ -88,8 +88,8 @@ router.post('/resumir', authMiddleware, async (req, res) => {
     // Optimizar texto para reducir cuota
     const textoOptimizado = optimizarTexto(texto);
     
-    // Prompt optimizado para ser más eficiente
-    const promptOptimizado = `Resume este texto en 3-5 frases clave, enfocándote en la información más importante:\n\n${textoOptimizado}`;
+    // Prompt mejorado para resúmenes más completos
+    const promptOptimizado = `Por favor, resume el siguiente texto de manera clara y concisa, manteniendo las ideas principales y detalles importantes. El resumen debe ser lo suficientemente completo para entender el contenido original sin perder información esencial:\n\n${textoOptimizado}`;
 
     const respuesta = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
@@ -101,8 +101,8 @@ router.post('/resumir', authMiddleware, async (req, res) => {
             content: promptOptimizado
           }
         ],
-        max_tokens: 150, // Limitar tokens para optimizar cuota
-        temperature: 0.3 // Menos aleatoriedad para respuestas más consistentes
+        max_tokens: 500, // Aumentar para resúmenes más completos
+        temperature: 0.5 // Un poco más de creatividad para mejores resúmenes
       },
       {
         headers: {
