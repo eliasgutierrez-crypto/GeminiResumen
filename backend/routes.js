@@ -26,11 +26,11 @@ router.post('/resumir', authMiddleware, async (req, res) => {
     console.log(' Iniciando llamada a Gemini API...');
     console.log(' Texto a resumir longitud:', texto.length);
     console.log(' API Key configurada:', process.env.GEMINI_API_KEY ? 'Sí' : 'No');
-    console.log(' Endpoint:', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent');
+    console.log(' Endpoint:', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent');
     console.log(' Modelo:', 'gemini-1.5-flash');
     
     const respuesta = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         contents: [
           {
