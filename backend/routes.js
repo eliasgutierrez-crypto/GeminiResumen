@@ -92,14 +92,14 @@ router.post('/resumir', authMiddleware, async (req, res) => {
     const promptOptimizado = `Por favor, resume el siguiente texto de manera clara y concisa, manteniendo las ideas principales y detalles importantes. El resumen debe ser lo suficientemente completo para entender el contenido original sin perder información esencial:\n\n${textoOptimizado}`;
 
     console.log(' Enviando a Gemini API:');
-    console.log('   - Modelo:', "gemini-2.5-flash");
+    console.log('   - Modelo:', "gemini-1.5-flash");
     console.log('   - Max tokens:', 500);
     console.log('   - Temperature:', 0.5);
     console.log('   - Longitud del texto:', textoOptimizado.length);
     console.log('   - API Key configurada:', process.env.GEMINI_API_KEY ? ' ' : ' ');
 
     const respuesta = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         contents: [
           {
