@@ -88,13 +88,21 @@ router.post('/resumir', authMiddleware, async (req, res) => {
     // Optimizar texto para reducir cuota
     const textoOptimizado = optimizarTexto(texto);
     
+    // Verificar API Key
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('ERROR: GEMINI_API_KEY no está configurada en variables de entorno');
+      return res.status(500).json({ error: 'Error de configuración del servidor: API Key no encontrada' });
+    }
+    
+    console.log('API Key configurada:', process.env.GEMINI_API_KEY.substring(0, 10) + '...');
+    
     // Prompt simple
     const promptOptimizado = `Resume el siguiente texto:\n\n${textoOptimizado}`;
 
     const respuesta = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
-        model: "gemini-1.5-flash",
+        model: "gemini-1.5-pro",
         messages: [
           {
             role: "user",
