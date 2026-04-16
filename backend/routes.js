@@ -91,29 +91,47 @@ router.post('/resumir', authMiddleware, async (req, res) => {
     // Prompt mejorado para resúmenes más completos
     const promptOptimizado = `Por favor, resume el siguiente texto de manera clara y concisa, manteniendo las ideas principales y detalles importantes. El resumen debe ser lo suficientemente completo para entender el contenido original sin perder información esencial:\n\n${textoOptimizado}`;
 
+    console.log(' Enviando a Gemini API:');
+    console.log('   - Modelo:', "gemini-2.5-flash");
+    console.log('   - Max tokens:', 500);
+    console.log('   - Temperature:', 0.5);
+    console.log('   - Longitud del texto:', textoOptimizado.length);
+    console.log('   - API Key configurada:', process.env.GEMINI_API_KEY ? ' ' : ' ');
+
     const respuesta = await axios.post(
-      'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
-        model: "gemini-2.5-flash",
-        messages: [
+        contents: [
           {
-            role: "user",
-            content: promptOptimizado
+            parts: [
+              {
+                text: promptOptimizado
+              }
+            ]
           }
         ],
-        max_tokens: 500, // Aumentar para resúmenes más completos
-        temperature: 0.5 // Un poco más de creatividad para mejores resúmenes
+        generationConfig: {
+          maxOutputTokens: 500,
+          temperature: 0.5,
+          topP: 0.8,
+          topK: 40
+        }
       },
       {
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.GEMINI_API_KEY}`
+          "Content-Type": "application/json"
         },
         timeout: 15000 // Timeout para evitar consumos innecesarios
       }
     );
 
-    const resumen = respuesta.data.choices?.[0]?.message?.content || 'No se pudo obtener resumen';
+    console.log(' Respuesta de Gemini API:');
+    console.log('   - Status:', respuesta.status);
+    console.log('   - Candidates:', respuesta.data.candidates?.length || 0);
+    console.log('   - Content length:', respuesta.data.candidates?.[0]?.content?.parts?.[0]?.text?.length || 0);
+    console.log('   - Respuesta completa:', JSON.stringify(respuesta.data, null, 2));
+
+    const resumen = respuesta.data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo obtener resumen';
     
     // Guardar en cache
     cache.set(textoHash, {
